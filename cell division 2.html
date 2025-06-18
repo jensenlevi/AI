@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Lesson: The Cell Cycle & Mitosis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Chosen Palette: Subtle Earth Tones -->
+    <!-- Application Structure Plan: A thematic, sequential SPA that guides students through an interactive learning journey. It starts with a hook, explains the overall cell cycle, provides a deep interactive dive into the phases of mitosis, explains the purpose, and ends with a self-assessment quiz and further resources. This structure turns a teacher-facing plan into a student-facing module, promoting self-paced exploration and better retention than a static document. -->
+    <!-- Visualization & Content Choices: 
+        - Hook (Engage): Inform/Engage -> Text -> No interaction -> Justification: Simple, direct way to introduce the 'why'.
+        - Cell Cycle Overview (Explore): Organize/Inform -> Clickable HTML/CSS Diagram -> JS Toggling Visibility -> Justification: Provides a high-level map of the process before the deep dive, improving comprehension.
+        - Mitosis Phases (Explain): Organize/Inform/Compare -> JS-driven Canvas Animation + Text -> JS-powered buttons -> Justification: The most crucial part. Dynamic canvas animations are far more effective for showing a process than static images. This is the core interactive element.
+        - Purpose of Mitosis (Elaborate): Inform -> Icon-based columns -> CSS hover effects -> Justification: Visually breaks down the key takeaways into easily digestible chunks.
+        - Quiz (Evaluate): Evaluate -> HTML Form + JS -> JS for checking answers -> Justification: Provides immediate feedback to the student, reinforcing learning.
+        - Further Resources (Extend): Inform -> JS-powered accordion -> Click to expand -> Justification: Organizes extra information cleanly without cluttering the main view.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F4;
+            color: #36454F;
+        }
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #3A5A40;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -2px rgb(0 0 0 / 0.1);
+        }
+        .phase-button {
+            background-color: #A3B18A;
+            color: #FFFFFF;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 9999px;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+            flex-grow: 1;
+        }
+        .phase-button:hover {
+            background-color: #588157;
+            transform: scale(1.05);
+        }
+        .phase-button.active {
+            background-color: #3A5A40;
+            color: #FFFFFF;
+            transform: scale(1.1);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        .accordion-header {
+            cursor: pointer;
+            background-color: #DAD7CD;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease-out;
+            padding: 0 1rem;
+            background-color: #FFFFFF;
+            border-bottom-left-radius: 0.5rem;
+            border-bottom-right-radius: 0.5rem;
+        }
+        .accordion-arrow {
+            transition: transform 0.3s ease;
+        }
+        .quiz-option {
+            background-color: #EAE7DC;
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .quiz-option:hover {
+            background-color: #DAD7CD;
+        }
+        .quiz-option.selected {
+            background-color: #A3B18A;
+            color: white;
+        }
+        .feedback {
+            font-weight: bold;
+            margin-left: 1rem;
+        }
+        .correct { color: #3A5A40; }
+        .incorrect { color: #C94C4C; }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
+
+        <!-- Header Section -->
+        <header class="text-center mb-16">
+            <h1 class="text-4xl md:text-6xl font-bold text-[#3A5A40] mb-4">The Cell's Amazing Journey</h1>
+            <p class="text-lg md:text-xl text-gray-600">Discover how a single cell divides to create new life, heal wounds, and help you grow.</p>
+        </header>
+
+        <!-- Why It Matters Section -->
+        <section id="engage" class="mb-20">
+             <div class="card text-center">
+                <h2 class="text-2xl font-bold mb-4 text-[#588157]">Why Do Cells Divide?</h2>
+                <p class="text-lg">Have you ever wondered how you grew from a baby into who you are today? Or how a cut on your finger seems to magically heal itself? The answer isn't magic—it's cell division! Living things rely on this incredible process to grow, repair damage, and replace old cells. It's happening in your body right now!</p>
+            </div>
+        </section>
+
+        <!-- The Cell Cycle Section -->
+        <section id="explore" class="mb-20">
+            <h2 class="section-title">The Big Picture: A Cell's Life Cycle</h2>
+            <p class="text-center text-lg mb-8">A cell's life is a carefully regulated cycle with three main stages. Think of it as a cell's "to-do list" before it can divide. Click on each stage to learn more.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="card text-center cycle-stage cursor-pointer" data-target="interphase-content">
+                    <h3 class="text-xl font-bold mb-2">1. Interphase</h3>
+                    <p>The "prep" phase.</p>
+                </div>
+                <div class="card text-center cycle-stage cursor-pointer" data-target="mitosis-content">
+                    <h3 class="text-xl font-bold mb-2">2. Mitosis</h3>
+                    <p>The nucleus divides.</p>
+                </div>
+                <div class="card text-center cycle-stage cursor-pointer" data-target="cytokinesis-content">
+                    <h3 class="text-xl font-bold mb-2">3. Cytokinesis</h3>
+                    <p>The cell splits in two.</p>
+                </div>
+            </div>
+            <div id="cycle-content-area" class="mt-8">
+                <div id="interphase-content" class="cycle-info hidden p-6 bg-white rounded-lg shadow-md">
+                    <h4 class="font-bold text-lg text-[#3A5A40]">Interphase: Getting Ready</h4>
+                    <p>This is the longest part of a cell's life. During this time, the cell grows, carries out its normal functions, and most importantly, makes an exact copy of its DNA. It's like a factory doubling all its blueprints before expanding.</p>
+                </div>
+                <div id="mitosis-content" class="cycle-info hidden p-6 bg-white rounded-lg shadow-md">
+                    <h4 class="font-bold text-lg text-[#3A5A40]">Mitosis: Organizing and Separating DNA</h4>
+                    <p>This is the main event of cell division, where the cell's nucleus divides. It's a highly organized process to ensure each new cell gets a perfect copy of the DNA. We'll explore this in detail next!</p>
+                </div>
+                 <div id="cytokinesis-content" class="cycle-info hidden p-6 bg-white rounded-lg shadow-md">
+                    <h4 class="font-bold text-lg text-[#3A5A40]">Cytokinesis: Splitting Up</h4>
+                    <p>This is the final step. The cytoplasm (the jelly-like substance filling the cell) divides, and the cell membrane pinches inward, creating two separate, identical "daughter cells."</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Mitosis Phases Section -->
+        <section id="explain" class="mb-20">
+            <h2 class="section-title">The Main Event: A Deep Dive into Mitosis</h2>
+            <p class="text-center text-lg mb-8">Mitosis is a four-step dance performed by chromosomes. Use the buttons below to see how each phase works. A helpful way to remember the order is **PMAT**.</p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 mb-8">
+                <button class="phase-button active" data-phase="prophase">Prophase</button>
+                <button class="phase-button" data-phase="metaphase">Metaphase</button>
+                <button class="phase-button" data-phase="anaphase">Anaphase</button>
+                <button class="phase-button" data-phase="telophase">Telophase</button>
+            </div>
+
+            <div class="card flex flex-col md:flex-row items-center gap-8">
+                <div class="w-full md:w-1/2">
+                    <div class="chart-container relative mx-auto" style="height:300px; max-width:300px;">
+                        <canvas id="mitosisCanvas"></canvas>
+                    </div>
+                </div>
+                <div class="w-full md:w-1/2">
+                    <h3 id="phase-title" class="text-2xl font-bold text-[#3A5A40] mb-3">Prophase: Prepare</h3>
+                    <ul id="phase-description" class="list-disc list-inside space-y-2 text-gray-700">
+                        <li>Chromosomes condense and become visible (like tightly wound spaghetti).</li>
+                        <li>The nuclear envelope starts to break down.</li>
+                        <li>Spindle fibers (specialized protein structures) begin to form.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Purpose Section -->
+        <section id="elaborate" class="mb-20">
+            <h2 class="section-title">Why Mitosis is Essential</h2>
+            <p class="text-center text-lg mb-8">The outcome of mitosis is crucial: two new cells that are genetically identical to the original. This is vital for three main reasons.</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="card">
+                    <div class="text-4xl text-center mb-4">🌱</div>
+                    <h3 class="text-xl font-bold text-center mb-2">Growth</h3>
+                    <p>Multicellular organisms, like humans, start as a single cell. Mitosis allows us to grow by producing trillions of new, identical cells to build our bodies.</p>
+                </div>
+                <div class="card">
+                    <div class="text-4xl text-center mb-4">🩹</div>
+                    <h3 class="text-xl font-bold text-center mb-2">Repair & Replacement</h3>
+                    <p>When you get a paper cut or scrape your knee, mitosis creates new skin cells to heal the wound. It also constantly replaces old or damaged cells throughout your body.</p>
+                </div>
+                <div class="card">
+                    <div class="text-4xl text-center mb-4">🦠</div>
+                    <h3 class="text-xl font-bold text-center mb-2">Asexual Reproduction</h3>
+                    <p>For many single-celled organisms, like amoebas, mitosis is their way of reproducing. They simply divide in two to create a new, identical organism.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Evaluation Section -->
+        <section id="evaluate" class="mb-20">
+            <h2 class="section-title">Test Your Knowledge</h2>
+            <div class="card space-y-6">
+                <div class="quiz-question">
+                    <p class="font-semibold text-lg mb-2">1. Which phase of mitosis is happening when chromosomes line up in the middle of the cell?</p>
+                    <div data-question="1" data-answer="Metaphase">
+                        <div class="quiz-option" onclick="selectAnswer(this)">Prophase</div>
+                        <div class="quiz-option" onclick="selectAnswer(this)">Metaphase</div>
+                        <div class="quiz-option" onclick="selectAnswer(this)">Anaphase</div>
+                    </div>
+                    <span class="feedback"></span>
+                </div>
+                <div class="quiz-question">
+                    <p class="font-semibold text-lg mb-2">2. If a parent cell has 20 chromosomes, how many chromosomes will each of the two daughter cells have after mitosis?</p>
+                    <div data-question="2" data-answer="20">
+                        <div class="quiz-option" onclick="selectAnswer(this)">10</div>
+                        <div class="quiz-option" onclick="selectAnswer(this)">20</div>
+                        <div class="quiz-option" onclick="selectAnswer(this)">40</div>
+                    </div>
+                     <span class="feedback"></span>
+                </div>
+                <div class="quiz-question">
+                    <p class="font-semibold text-lg mb-2">3. What is the main purpose of mitosis for a multicellular organism like a human?</p>
+                    <div data-question="3" data-answer="Growth and Repair">
+                        <div class="quiz-option" onclick="selectAnswer(this)">Making reproductive cells</div>
+                        <div class="quiz-option" onclick="selectAnswer(this)">Creating genetic variation</div>
+                        <div class="quiz-option" onclick="selectAnswer(this)">Growth and Repair</div>
+                    </div>
+                     <span class="feedback"></span>
+                </div>
+                <div class="text-center">
+                    <button id="check-answers" class="phase-button bg-[#3A5A40]">Check Answers</button>
+                    <p id="quiz-result" class="mt-4 font-bold text-xl"></p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Extension Section -->
+        <section id="extend">
+             <h2 class="section-title">Explore More</h2>
+             <div class="space-y-4">
+                <div class="accordion">
+                    <div class="accordion-header"><span>Homework & Practice Ideas</span><span class="accordion-arrow">▼</span></div>
+                    <div class="accordion-content">
+                        <div class="p-4">
+                            <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Diagram Labeling:</strong> Draw the cell cycle and label all the phases of mitosis. Write one key event for each phase.</li>
+                                <li><strong>Vocabulary Flashcards:</strong> Create flashcards for key terms like Mitosis, Chromosome, Cytokinesis, etc.</li>
+                                <li><strong>Creative Writing:</strong> Imagine you are a chromosome. Write a short story about your journey through mitosis.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="accordion">
+                    <div class="accordion-header"><span>For Advanced Learners</span><span class="accordion-arrow">▼</span></div>
+                    <div class="accordion-content">
+                         <div class="p-4">
+                             <ul class="list-disc list-inside space-y-2">
+                                <li><strong>Uncontrolled Division:</strong> Research how errors in the cell cycle can lead to cancer.</li>
+                                <li><strong>Plant vs. Animal:</strong> Compare and contrast mitosis in plant cells and animal cells. What's different about cytokinesis?</li>
+                                <li><strong>Cell Cycle Checkpoints:</strong> Investigate the "checkpoints" in the cell cycle that regulate its progression. What are cyclins and CDKs?</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+             </div>
+        </section>
+
+    </div>
+
+    <script>
+        const phaseData = {
+            prophase: {
+                title: 'Prophase: Prepare',
+                description: [
+                    'Chromosomes condense and become visible (like tightly wound spaghetti).',
+                    'The nuclear envelope starts to break down.',
+                    'Spindle fibers (specialized protein structures) begin to form.'
+                ]
+            },
+            metaphase: {
+                title: 'Metaphase: Middle',
+                description: [
+                    'The condensed chromosomes line up in a single file line along the middle of the cell.',
+                    'This imaginary line is called the metaphase plate.',
+                    'Spindle fibers are fully formed and attach to each chromosome.'
+                ]
+            },
+            anaphase: {
+                title: 'Anaphase: Apart',
+                description: [
+                    'The spindle fibers shorten, pulling the sister chromatids apart.',
+                    'Each chromatid is now considered its own chromosome.',
+                    'The separated chromosomes move to opposite ends (poles) of the cell.'
+                ]
+            },
+            telophase: {
+                title: 'Telophase: Two Nuclei',
+                description: [
+                    'The chromosomes arrive at opposite poles of the cell.',
+                    'Two new nuclear envelopes form around the two groups of chromosomes.',
+                    'The chromosomes begin to uncoil and are no longer visible.'
+                ]
+            }
+        };
+
+        const canvas = document.getElementById('mitosisCanvas');
+        const ctx = canvas.getContext('2d');
+        let currentPhase = 'prophase';
+
+        function drawCell(phase) {
+            const width = canvas.width;
+            const height = canvas.height;
+            ctx.clearRect(0, 0, width, height);
+            
+            ctx.strokeStyle = '#36454F';
+            ctx.fillStyle = '#EAE7DC';
+            ctx.lineWidth = 4;
+
+            // Draw cell
+            ctx.beginPath();
+            ctx.ellipse(width / 2, height / 2, width / 2 - 10, height / 2.5 - 10, 0, 0, 2 * Math.PI);
+            ctx.fill();
+            ctx.stroke();
+
+            // Draw nucleus/chromosomes based on phase
+            ctx.fillStyle = '#3A5A40';
+            ctx.lineWidth = 3;
+
+            switch(phase) {
+                case 'prophase':
+                    drawChromosomes(4, 'scatter', width, height);
+                    // Dotted nucleus
+                    ctx.setLineDash([5, 5]);
+                    ctx.beginPath();
+                    ctx.arc(width/2, height/2, width/3, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                    break;
+                case 'metaphase':
+                    drawChromosomes(4, 'middle', width, height);
+                    drawSpindles(4, 'middle', width, height);
+                    break;
+                case 'anaphase':
+                    drawChromosomes(4, 'apart', width, height);
+                    drawSpindles(4, 'apart', width, height);
+                    break;
+                case 'telophase':
+                    ctx.setLineDash([]);
+                    // Draw two new nuclei
+                    ctx.beginPath();
+                    ctx.arc(width/4 + 10, height/2, width/5, 0, 2*Math.PI);
+                    ctx.stroke();
+                     ctx.beginPath();
+                    ctx.arc(width * 3/4 - 10, height/2, width/5, 0, 2*Math.PI);
+                    ctx.stroke();
+                    // chromosomes uncoiling inside
+                    for(let i=0; i<4; i++) {
+                        ctx.beginPath();
+                        ctx.moveTo(width/4 - 15 + Math.random()*30, height/2 - 20 + Math.random()*40);
+                        ctx.lineTo(width/4 - 15 + Math.random()*30, height/2 - 20 + Math.random()*40);
+                        ctx.stroke();
+                        ctx.beginPath();
+                        ctx.moveTo(width * 3/4 - 15 + Math.random()*30, height/2 - 20 + Math.random()*40);
+                        ctx.lineTo(width * 3/4 - 15 + Math.random()*30, height/2 - 20 + Math.random()*40);
+                        ctx.stroke();
+                    }
+                    break;
+            }
+        }
+        
+        function drawChromosomes(count, position, w, h) {
+            for(let i = 0; i < count; i++) {
+                ctx.beginPath();
+                if (position === 'scatter') {
+                    const x = w/3 + Math.random() * (w/3);
+                    const y = h/3 + Math.random() * (h/3);
+                    drawX(x, y);
+                } else if (position === 'middle') {
+                    const y = h/2 - 40 + i*25;
+                    drawX(w/2, y);
+                } else if (position === 'apart') {
+                    const y = h/2 - 40 + i*25;
+                    drawV(w/4 + 15, y, 'right');
+                    drawV(w*3/4 - 15, y, 'left');
+                }
+            }
+        }
+        
+        function drawX(x, y) {
+            ctx.moveTo(x-10, y-10);
+            ctx.lineTo(x+10, y+10);
+            ctx.moveTo(x+10, y-10);
+            ctx.lineTo(x-10, y+10);
+            ctx.stroke();
+        }
+        
+        function drawV(x, y, direction) {
+            if(direction === 'right') {
+                ctx.moveTo(x-10, y-10);
+                ctx.lineTo(x, y);
+                ctx.lineTo(x-10, y+10);
+            } else { // left
+                ctx.moveTo(x+10, y-10);
+                ctx.lineTo(x, y);
+                ctx.lineTo(x+10, y+10);
+            }
+            ctx.stroke();
+        }
+
+        function drawSpindles(count, position, w, h) {
+            ctx.strokeStyle = '#A3B18A';
+            ctx.lineWidth = 1;
+            for(let i=0; i<count; i++) {
+                const y = h/2 - 40 + i*25;
+                if(position === 'middle'){
+                    ctx.beginPath();
+                    ctx.moveTo(10, h/2);
+                    ctx.lineTo(w/2, y);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(w-10, h/2);
+                    ctx.lineTo(w/2, y);
+                    ctx.stroke();
+                } else if (position === 'apart') {
+                     ctx.beginPath();
+                    ctx.moveTo(10, h/2);
+                    ctx.lineTo(w/4+15, y);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(w-10, h/2);
+                    ctx.lineTo(w*3/4-15, y);
+                    ctx.stroke();
+                }
+            }
+            ctx.strokeStyle = '#36454F'; // Reset
+        }
+
+
+        function updatePhase(phase) {
+            const data = phaseData[phase];
+            document.getElementById('phase-title').innerText = data.title;
+            const descList = document.getElementById('phase-description');
+            descList.innerHTML = '';
+            data.description.forEach(item => {
+                const li = document.createElement('li');
+                li.innerText = item;
+                descList.appendChild(li);
+            });
+
+            document.querySelectorAll('.phase-button').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.dataset.phase === phase) {
+                    btn.classList.add('active');
+                }
+            });
+
+            currentPhase = phase;
+            drawCell(currentPhase);
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const canvasContainer = document.querySelector('.chart-container');
+            canvas.width = canvasContainer.offsetWidth;
+            canvas.height = canvasContainer.offsetHeight;
+
+            updatePhase('prophase');
+
+            document.querySelectorAll('.phase-button').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    updatePhase(e.target.dataset.phase);
+                });
+            });
+
+            const cycleStages = document.querySelectorAll('.cycle-stage');
+            const cycleInfos = document.querySelectorAll('.cycle-info');
+
+            cycleStages.forEach(stage => {
+                stage.addEventListener('click', () => {
+                    const targetId = stage.dataset.target;
+                    const targetInfo = document.getElementById(targetId);
+
+                    let isAlreadyVisible = !targetInfo.classList.contains('hidden');
+                    
+                    cycleInfos.forEach(info => info.classList.add('hidden'));
+
+                    if (!isAlreadyVisible) {
+                        targetInfo.classList.remove('hidden');
+                    }
+                });
+            });
+
+            document.querySelectorAll('.accordion-header').forEach(header => {
+                header.addEventListener('click', () => {
+                    const content = header.nextElementSibling;
+                    const arrow = header.querySelector('.accordion-arrow');
+                    if (content.style.maxHeight) {
+                        content.style.maxHeight = null;
+                        arrow.style.transform = 'rotate(0deg)';
+                    } else {
+                        document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
+                        document.querySelectorAll('.accordion-arrow').forEach(a => a.style.transform = 'rotate(0deg)');
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        arrow.style.transform = 'rotate(180deg)';
+                    }
+                });
+            });
+
+            document.getElementById('check-answers').addEventListener('click', () => {
+                const questions = document.querySelectorAll('.quiz-question');
+                let correctAnswers = 0;
+                questions.forEach(q => {
+                    const selected = q.querySelector('.quiz-option.selected');
+                    const feedbackSpan = q.querySelector('.feedback');
+                    const correctAnswer = q.querySelector('div[data-answer]').dataset.answer;
+                    
+                    feedbackSpan.textContent = '';
+                    feedbackSpan.classList.remove('correct', 'incorrect');
+
+                    if (selected) {
+                        if (selected.textContent === correctAnswer) {
+                            feedbackSpan.textContent = 'Correct!';
+                            feedbackSpan.classList.add('correct');
+                            correctAnswers++;
+                        } else {
+                            feedbackSpan.textContent = `Incorrect. The answer is ${correctAnswer}.`;
+                            feedbackSpan.classList.add('incorrect');
+                        }
+                    } else {
+                        feedbackSpan.textContent = 'Please select an answer.';
+                        feedbackSpan.classList.add('incorrect');
+                    }
+                });
+                document.getElementById('quiz-result').textContent = `You got ${correctAnswers} out of ${questions.length} correct.`;
+            });
+        });
+
+        window.addEventListener('resize', () => {
+            const canvasContainer = document.querySelector('.chart-container');
+            canvas.width = canvasContainer.offsetWidth;
+            canvas.height = canvasContainer.offsetHeight;
+            drawCell(currentPhase);
+        });
+
+        function selectAnswer(element) {
+            const parent = element.parentElement;
+            parent.querySelectorAll('.quiz-option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+        }
+    </script>
+</body>
+</html>
